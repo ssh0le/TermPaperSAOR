@@ -8,18 +8,21 @@ namespace TermPaper
 {
     public class Tariff
     {
-        private const int Default = -1;
+        public const int Default = -1;
+        public const int Empty = 0;
         public Producer Producer;
         public Consumer Consumer;
         public double Rate;
         public int Amount;
+        public double Potential;
 
         public Tariff(Producer producer, Consumer consumer, double rate)
         {
             Producer = producer;
             Consumer = consumer;
             Rate = rate;
-            this.SetDefault();
+            this.SetDefaultAmount();
+            ClearPotential();
         }
 
         public void SetAmount(int amount)
@@ -27,9 +30,14 @@ namespace TermPaper
             Amount = amount;
         }
 
-        public void SetDefault()
+        public void SetDefaultAmount()
         {
             Amount = Default;
+        }
+
+        public void SetEmptyAmount()
+        {
+            Amount = Empty;
         }
 
         public int GetConsumerNum()
@@ -40,6 +48,17 @@ namespace TermPaper
         public int GetProducerNum()
         {
             return Producer.Number;
+        }
+
+        
+        public void ClearPotential()
+        {
+            Potential = double.NaN;
+        }
+
+        public void SetPotential(double value)
+        {
+            Potential = value;
         }
     }
 }

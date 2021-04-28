@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace TermPaper
 {
@@ -44,6 +45,7 @@ namespace TermPaper
 
         private void button1_Click(object sender, EventArgs e)
         {
+            Interface.Clear();
             SolverTool.InitializeTariffs(GetTariffMatrix());
             SetTariffMatrix(SolverTool.GetAmountArray());
             
@@ -51,6 +53,7 @@ namespace TermPaper
 
         private void button2_Click(object sender, EventArgs e)
         {
+            Interface.Clear();
             int[] volume = { 3300, 6000, 1250, 1600, 1850 };
             int[] norma = { 500, 385, 310, 300 };
             double[,] rates = { { 0.8, 1, 0.9, 0.9 }, { 2.4, 3, 3.4, 3.2 }, { 0, 0, 1, 0.95 }, { 0.2, 0.27, 0.25, 0.27 }, { 0, 0.8, 0.75, 0.85 } };
@@ -79,11 +82,11 @@ namespace TermPaper
             string[,] matrix = new string[textBoxes.GetLength(0), textBoxes.GetLength(1)];
             for (int i = 0; i < matrix.GetLength(0) - 1; i++)
             {
-                for(int j = 0; j < matrix.GetLength(1) - 1; j++)
+                matrix[i, matrix.GetLength(1) - 1] = textBoxes[i, 0].Text;
+                for (int j = 0; j < matrix.GetLength(1) - 1; j++)
                 {
                     matrix[i, j] = textBoxes[i, j+1].Text;
                 }
-                matrix[i, matrix.GetLength(1) - 1] = textBoxes[i, 0].Text;
             }
             for (int i = 0; i < matrix.GetLength(1) - 1; i++)
             {
@@ -106,6 +109,30 @@ namespace TermPaper
             {
                textBoxes[textBoxes.GetLength(0) - 1, i + 1].Text = matrix[matrix.GetLength(0) - 1, i];
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+            Interface.Clear();
+            SolverTool.InitializeTariffs(GetTariffMatrix());
+            SetTariffMatrix(SolverTool.GetPotentialArray());
+            Interface.HighlightFilledCells(SolverTool.GetAmountArray());
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Interface.Clear();
+            SolverTool.Displayer = Iterator;
+            SolverTool.SolveProblem(GetTariffMatrix());
+            SetTariffMatrix(SolverTool.GetPotentialArray());
+        }
+
+        private static void Iterator()
+        {
+            Interface.Clear();
+            SetTariffMatrix(SolverTool.GetPotentialArray());
+            Interface.HighlightFilledCells(SolverTool.GetAmountArray());
+            MessageBox.Show("next interation");
         }
     }
 }
