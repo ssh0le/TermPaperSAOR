@@ -71,10 +71,7 @@ namespace TermPaper
             this.textBox24 = new System.Windows.Forms.TextBox();
             this.textBox14 = new System.Windows.Forms.TextBox();
             this.textBox04 = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -391,19 +388,9 @@ namespace TermPaper
             this.textBox04.Size = new System.Drawing.Size(69, 20);
             this.textBox04.TabIndex = 54;
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(561, 110);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(87, 23);
-            this.button1.TabIndex = 60;
-            this.button1.Text = "Распределить";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(561, 60);
+            this.button2.Location = new System.Drawing.Point(561, 136);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(87, 34);
             this.button2.TabIndex = 61;
@@ -411,28 +398,9 @@ namespace TermPaper
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(571, 265);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(70, 13);
-            this.label1.TabIndex = 62;
-            this.label1.Text = "Потенциалы";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(574, 356);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(29, 13);
-            this.label2.TabIndex = 63;
-            this.label2.Text = "тест";
-            // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(561, 153);
+            this.button3.Location = new System.Drawing.Point(561, 187);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(87, 38);
             this.button3.TabIndex = 64;
@@ -446,10 +414,7 @@ namespace TermPaper
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(670, 421);
             this.Controls.Add(this.button3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox54);
             this.Controls.Add(this.textBox44);
             this.Controls.Add(this.textBox34);
@@ -543,10 +508,7 @@ namespace TermPaper
         private System.Windows.Forms.TextBox textBox24;
         private System.Windows.Forms.TextBox textBox14;
         private System.Windows.Forms.TextBox textBox04;
-        private Button button1;
         private Button button2;
-        private Label label1;
-        private Label label2;
         private Button button3;
     }
 }

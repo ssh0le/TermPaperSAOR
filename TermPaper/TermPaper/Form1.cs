@@ -43,14 +43,6 @@ namespace TermPaper
             textBoxes[3, 0] = textBox30;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            Interface.Clear();
-            SolverTool.InitializeTariffs(GetTariffMatrix());
-            SetTariffMatrix(SolverTool.GetAmountArray());
-            
-        }
-
         private void button2_Click(object sender, EventArgs e)
         {
             Interface.Clear();
@@ -111,28 +103,19 @@ namespace TermPaper
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-            Interface.Clear();
-            SolverTool.InitializeTariffs(GetTariffMatrix());
-            SetTariffMatrix(SolverTool.GetPotentialArray());
-            Interface.HighlightFilledCells(SolverTool.GetAmountArray());
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
             Interface.Clear();
             SolverTool.Displayer = Iterator;
             SolverTool.SolveProblem(GetTariffMatrix());
-            SetTariffMatrix(SolverTool.GetPotentialArray());
+            SetTariffMatrix(SolverTool.GetAmountArray());
         }
 
         private static void Iterator()
         {
             Interface.Clear();
-            SetTariffMatrix(SolverTool.GetPotentialArray());
+            SetTariffMatrix(SolverTool.GetAmountArray());
             Interface.HighlightFilledCells(SolverTool.GetAmountArray());
-            MessageBox.Show("next interation");
         }
     }
 }

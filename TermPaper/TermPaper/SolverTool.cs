@@ -14,7 +14,6 @@ namespace TermPaper
         //stock |_______|_______|_______|________|
         //V pot |_______|_______|_______|
 
-
         private static Tariff[,] tariffs;
         private static List<Consumer> consumers;
         private static List<Producer> producers;
@@ -22,7 +21,7 @@ namespace TermPaper
         private const int ConsumerAmount = 5;
         private const int AddToMax = 1;
         private static double[] Upots;
-        private static double[] Vpots; 
+        private static double[] Vpots;
         public static Action Displayer;
 
         public static void NorthWestMethod()
@@ -58,12 +57,11 @@ namespace TermPaper
                 else
                 {
                     tariffs[verIndex, horIndex].SetAmount(stock);
-                    //самый юго восточный элемент матрицы
                     if (horIndex + 1 >= tariffs.GetLength(1) && verIndex + 1 >= tariffs.GetLength(0))
                     {
                         break;
                     }
-                    if (verIndex + 1 < tariffs.GetLength(1))
+                    if (verIndex + 1 < tariffs.GetLength(0))
                     {
                         stock -= demand;
                         demand = consumers[++verIndex].Demand;
@@ -82,32 +80,21 @@ namespace TermPaper
         {
             InitializeItems(matrix);
             tariffs = new Tariff[consumers.Count + 1, producers.Count + 1];
-            double MaxRate = 0;
-            for (int i = 0; i < ConsumerAmount; i++)
-            {
-                for (int j = 0; j < ProducerAmount; j++)
-                {
-                    try
-                    {
-                        double rate = double.Parse(matrix[i, j]);
-                        if (rate > MaxRate)
-                        {
-                            MaxRate = rate;
-                        }
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-            }
+            double MaxRate = FindMaxRate(matrix);
             for (int i = 0; i < ConsumerAmount; i++)
             {
                 for (int j = 0; j < ProducerAmount; j++)
                 {
                     if (double.TryParse(matrix[i, j], out double rate))
                     {
-                        tariffs[i, j] = new Tariff(producers[j], consumers[i], rate);
+                        if (rate > 0)
+                        {
+                            tariffs[i, j] = new Tariff(producers[j], consumers[i], rate);
+                        }
+                        else
+                        {
+                            tariffs[i, j] = new Tariff(producers[j], consumers[i], MaxRate + AddToMax);
+                        }
                     }
                     else
                     {
@@ -141,6 +128,30 @@ namespace TermPaper
             {
                 ResizeTariffArray(ref tariffs, ConsumerAmount, ProducerAmount);
             }
+        }
+
+        private static double FindMaxRate(string [,] matrix)
+        {
+            double MaxRate = 0;
+            for (int i = 0; i < ConsumerAmount; i++)
+            {
+                for (int j = 0; j < ProducerAmount; j++)
+                {
+                    try
+                    {
+                        double rate = double.Parse(matrix[i, j]);
+                        if (rate > MaxRate)
+                        {
+                            MaxRate = rate;
+                        }
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+            }
+            return MaxRate;
         }
 
         private static void ResizeTariffArray(ref Tariff[,] array, int rows, int cols)
@@ -244,23 +255,23 @@ namespace TermPaper
             InitializeTariffs(matrix);
             NorthWestMethod();
             FindOptimalSolutuion();
+            ShowResultSum();
         }
 
         public static void FindOptimalSolutuion()
         {
             SetPotentials();
-            double maxPotential = FindMaxPotential();
-            if (maxPotential < 0)
+            Tariff perspectiveTariff = FindPerspectiveTariff();
+            if (perspectiveTariff == null)
             {
-                MessageBox.Show("Оптимальное решение уже найденно! "  + maxPotential.ToString());
+                MessageBox.Show("Оптимальное решение уже найденно! ");
                 return;
             }
             do
             {
-                Tariff newTariff = FindTariffByPotential(maxPotential);
-                newTariff.SetEmptyAmount();
+                perspectiveTariff.SetEmptyAmount();
                 List<Tariff> filledTariffs = GetFilledTariffs();
-                List<Tariff> circuitNodes = GetTariffContour(newTariff, filledTariffs);
+                List<Tariff> circuitNodes = GetTariffContour(perspectiveTariff, filledTariffs);
                 circuitNodes.Reverse();
                 int amount = int.MaxValue;
                 for (int i = 1; i < circuitNodes.Count; i += 2)
@@ -275,7 +286,14 @@ namespace TermPaper
                     circuitNodes[i].SetAmount(circuitNodes[i++].Amount + amount);
                     if (circuitNodes[i].Amount - amount == 0)
                     {
-                        circuitNodes[i].SetDefaultAmount();
+                        if (IsNecessaryTariff(circuitNodes[i]))
+                        {
+                            circuitNodes[i].SetEmptyAmount();
+                        }
+                        else
+                        {
+                            circuitNodes[i].SetDefaultAmount();
+                        }
                     }
                     else
                     {
@@ -283,10 +301,12 @@ namespace TermPaper
                     }
                 }
                 SetPotentials();
-                maxPotential = FindMaxPotential();
+                perspectiveTariff = FindPerspectiveTariff();
+                RemoveUnnecessaryTariffs();
                 Displayer?.Invoke();
             }
-            while (maxPotential > 0);
+            while (perspectiveTariff != null);
+            ResizeTariffArray(ref tariffs, ConsumerAmount, ProducerAmount);
         }
 
         enum Dimension
@@ -325,16 +345,6 @@ namespace TermPaper
             }
         }
 
-        private static void ShowTariffsList(List<Tariff> fTariffs)
-        {
-            string mes = "";
-            foreach(Tariff tariff in fTariffs)
-            {
-                mes += tariff.GetConsumerNum() + " " + tariff.GetProducerNum() + " " + tariff.Amount + "\n";
-            }
-            MessageBox.Show(mes);
-        }
-
         private static Tariff FindTariffInDimension(Tariff startTariff, Dimension dimension, List<Tariff> tariffs)
         {
             Tariff newTariff = null;
@@ -360,30 +370,20 @@ namespace TermPaper
             return newTariff;
         }
 
-        private static Tariff FindTariffByPotential(double potential)
+        private static Tariff FindPerspectiveTariff()
         {
             Tariff newTariff = null;
-            foreach (Tariff tariff in tariffs)
+            double maxDifference = 0;
+            foreach (Tariff tariff in GetUnfilledTariffs())
             {
-                if (tariff.Amount == Tariff.Default && tariff.Potential == potential)
+                double tariffDifference = tariff.Potential - tariff.Rate;
+                if (tariffDifference > maxDifference)
                 {
+                    maxDifference = tariffDifference;
                     newTariff = tariff;
                 }
             }
             return newTariff;
-        }
-
-        private static double FindMaxPotential()
-        {
-            double max = -1;
-            foreach (Tariff tariff in tariffs)
-            {
-                if (tariff.Amount == Tariff.Default && tariff.Potential > max)
-                {
-                    max = tariff.Potential;
-                }
-            }
-            return max;
         }
 
         private static List<Tariff> GetFilledTariffs()
@@ -399,22 +399,26 @@ namespace TermPaper
             return filledTariffs;
         }
 
+        private static List<Tariff> GetUnfilledTariffs()
+        {
+            List<Tariff> filledTariffs = new List<Tariff>();
+            foreach (Tariff tariff in tariffs)
+            {
+                if (tariff.Amount == Tariff.Default)
+                {
+                    filledTariffs.Add(tariff);
+                }
+            }
+            return filledTariffs;
+        }
+
         public static void SetPotentials()
         {
             List<Tariff> filledTariffs = GetFilledTariffs();
-            foreach (Tariff tariff in tariffs)
-            {
-                tariff.ClearPotential();
-                if (tariff.Amount != Tariff.Default)
-                {
-                    tariff.SetPotential(tariff.Rate);
-                }
-            }
-            int Ulength = tariffs.GetLength(0) == ConsumerAmount ? ConsumerAmount : ConsumerAmount + 1;
-            Upots = GetNaNArray(Ulength);
-            int Vlength = tariffs.GetLength(1) == ProducerAmount ? ProducerAmount : ProducerAmount + 1;
-            Vpots = GetNaNArray(Vlength);
-            int startIndex = 2;
+            ClearPotentials();
+            Upots = GetNaNArray(tariffs.GetLength(0));
+            Vpots = GetNaNArray(tariffs.GetLength(1));
+            int startIndex = 0;
             double Vpot = Math.Floor(filledTariffs[startIndex].Rate / 2);
             Vpots[filledTariffs[startIndex].GetProducerNum() - 1] = Vpot;
             Upots[filledTariffs[startIndex].GetConsumerNum() - 1] = filledTariffs[startIndex].Rate - Vpot;
@@ -422,22 +426,22 @@ namespace TermPaper
             {
                 foreach (Tariff tariff in filledTariffs)
                 {
-                    if (!(double.IsNaN(Vpots[tariff.GetProducerNum() - 1])) && !(double.IsNaN(Upots[tariff.GetConsumerNum() - 1])))
+                    if (!double.IsNaN(Vpots[tariff.GetProducerNum() - 1]) && !double.IsNaN(Upots[tariff.GetConsumerNum() - 1]))
                     {
                         filledTariffs.Remove(tariff);
                         break;
                     }
-                    if (double.IsNaN(Vpots[tariff.GetProducerNum() - 1]) && double.IsNaN(Upots[tariff.GetConsumerNum() - 1]))
-                    {
-                        continue;
-                    }
-                    if (double.IsNaN(Vpots[tariff.GetProducerNum() - 1]))
+                    if (double.IsNaN(Vpots[tariff.GetProducerNum() - 1]) && !double.IsNaN(Upots[tariff.GetConsumerNum() - 1]))
                     {
                         Vpots[tariff.GetProducerNum() - 1] = tariff.Rate - Upots[tariff.GetConsumerNum() - 1];
+                        filledTariffs.Remove(tariff);
+                        break;
                     }
-                    else
+                    if (!double.IsNaN(Vpots[tariff.GetProducerNum() - 1]) && double.IsNaN(Upots[tariff.GetConsumerNum() - 1]))
                     {
                         Upots[tariff.GetConsumerNum() - 1] = tariff.Rate - Vpots[tariff.GetProducerNum() - 1];
+                        filledTariffs.Remove(tariff);
+                        break;
                     }
                 }
             }
@@ -446,6 +450,18 @@ namespace TermPaper
                 if (double.IsNaN(tariff.Potential))
                 {
                     tariff.SetPotential(Upots[tariff.GetConsumerNum() - 1] + Vpots[tariff.GetProducerNum() - 1]);
+                }
+            }
+        }
+
+        private static void ClearPotentials()
+        {
+            foreach (Tariff tariff in tariffs)
+            {
+                tariff.ClearPotential();
+                if (tariff.Amount != Tariff.Default)
+                {
+                    tariff.SetPotential(tariff.Rate);
                 }
             }
         }
@@ -460,6 +476,86 @@ namespace TermPaper
             return array;
         }
 
+        private static bool IsNecessaryTariff(Tariff tariff)
+        {
+            List<Tariff> tariffs = GetFilledTariffs();
+            tariffs.Remove(tariff);
+            return CheckPotentials(tariffs);
+        }
+
+        private static bool CheckPotentials(List<Tariff> tariffList)
+        {
+            bool[] Upots, Vpots;
+            Vpots = GetArrayFilledByFalse(tariffs.GetLength(1));
+            Upots = GetArrayFilledByFalse(tariffs.GetLength(0));
+            int startIndex = 0;
+            Vpots[tariffList[startIndex].GetProducerNum() - 1] = true;
+            Upots[tariffList[startIndex].GetConsumerNum() - 1] = true;
+            tariffList.RemoveAt(startIndex);
+            int j = 1;
+            for (int i = 0; i < j && tariffList.Count > 0; i++)
+            {
+                foreach (Tariff tariff in tariffList)
+                {
+                    if (Vpots[tariff.GetProducerNum() - 1])
+                    {
+                        Upots[tariff.GetConsumerNum() - 1] = true;
+                        j++;
+                    }
+                    if (Upots[tariff.GetConsumerNum() - 1])
+                    {
+                        Vpots[tariff.GetProducerNum() - 1] = true;
+                        j++;
+                    }
+                }
+                for (int k = tariffList.Count - 1; k >= 0; k--)
+                {
+                    bool check = Upots[tariffList[k].GetConsumerNum() - 1] && Vpots[tariffList[k].GetProducerNum() - 1];
+                    if (check)
+                    {
+                        tariffList.RemoveAt(k);
+                    }
+                }
+            }
+            for (int i = 0; i < Vpots.Length; i++)
+            {
+                if (!Vpots[i])
+                {
+                    return !Vpots[i];
+                }
+            }
+            for (int i = 0; i < Upots.Length; i++)
+            {
+                if (!Upots[i])
+                {
+                    return !Upots[i];
+                }
+            }
+            return false;
+        }
+
+        private static bool[] GetArrayFilledByFalse(int length)
+        {
+            bool[] array = new bool[length];
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = false;
+            }
+            return array;
+        }
+
+        private static void RemoveUnnecessaryTariffs()
+        {
+            List<Tariff> filledTariffs = GetFilledTariffs();
+            foreach (Tariff tariff in filledTariffs)
+            {
+                if (tariff.Amount == Tariff.Empty && !IsNecessaryTariff(tariff))
+                {
+                    tariff.SetDefaultAmount();
+                }
+            }
+        }
+
         public static void ShowResultSum()
         {
             List<Tariff> filledTariffs = GetFilledTariffs();
@@ -470,5 +566,6 @@ namespace TermPaper
             }
             MessageBox.Show("Итоговая сумма: " + sum);
         }
+
     }
 }
