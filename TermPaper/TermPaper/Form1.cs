@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.ComponentModel;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using static TermPaper.Interface;
 
 namespace TermPaper
 {
     public partial class MainForm : Form
     {
         public static TextBox[,] textBoxes;
+        public static TextBox[] tractorAmounts;
+        public static TextBox ResultSum;
+        public static Button[] buttons;
+        private const string Err = "Не все текстовые поля имеют корректный формат";
+        private const string MesErr = "В выделенных текстовых полях указан некорректный формат!";
+        private static bool IsValidAllFormat;
 
         public MainForm()
         {
@@ -41,81 +50,131 @@ namespace TermPaper
             textBoxes[1, 0] = textBox10;
             textBoxes[2, 0] = textBox20;
             textBoxes[3, 0] = textBox30;
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Interface.Clear();
-            int[] volume = { 3300, 6000, 1250, 1600, 1850 };
-            int[] norma = { 500, 385, 310, 300 };
-            double[,] rates = { { 0.8, 1, 0.9, 0.9 }, { 2.4, 3, 3.4, 3.2 }, { 0, 0, 1, 0.95 }, { 0.2, 0.27, 0.25, 0.27 }, { 0, 0.8, 0.75, 0.85 } };
-            for (int i = 0; i < textBoxes.GetLength(0); i++)
+            foreach(TextBox tb in textBoxes)
             {
-                if (textBoxes[i, 0] != null)
+                if(tb != null)
                 {
-                    textBoxes[i, 0].Text = volume[i].ToString();
+                    SetEvents(tb);
                 }
             }
-            for (int i = 1; i < textBoxes.GetLength(1); i++)
+
+            tractorAmounts = new TextBox[4];
+            tractorAmounts[0] = TAmount1;
+            tractorAmounts[1] = TAmount2;
+            tractorAmounts[2] = TAmount3;
+            tractorAmounts[3] = TAmount4;
+            foreach(TextBox tb in tractorAmounts)
             {
-                textBoxes[textBoxes.GetLength(0) - 1, i].Text = norma[i- 1].ToString();
+                SetEvents(tb);
             }
-            for (int i = 0; i < textBoxes.GetLength(0) - 1; i++)
+
+            ResultSum = resultSum;
+
+            buttons = new Button[3];
+            buttons[0] = DefaultData;
+            buttons[1] = FindSolution;
+            buttons[2] = Clear;
+
+            IsValidAllFormat = false;
+        }
+
+        public enum MainFormButtons
+        {
+            SetDafultData,
+            FindSolution,
+            Clear
+        }
+
+        private void SetEvents(TextBox tb)
+        {
+            if(tb.Tag.ToString() == "double")
             {
-                for (int j = 1; j < textBoxes.GetLength(1); j++)
+                tb.KeyPress += OnlyDoubleKeyPressEvent;
+            }
+            else
+            {
+                tb.KeyPress += OnlyIntKeyPressEvent;
+            }
+            tb.TextChanged += TextBoxTextChanged;
+        }
+
+        private void OnlyDoubleKeyPressEvent(object sender, KeyPressEventArgs e)
+        {
+            char ch = e.KeyChar;
+            if (!Char.IsDigit(ch) && ch != 8 && ch != 44 && ch != 46)
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void OnlyIntKeyPressEvent(object sender, KeyPressEventArgs e)
+        {
+            char ch = e.KeyChar;
+            if (!Char.IsDigit(ch) && ch != 8) 
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TextBoxTextChanged(object sender, EventArgs e)
+        {
+            TextBox tb = sender as TextBox;
+            bool flag = false;
+            if (tb.Tag.ToString() == "double")
+            {
+                if (!double.TryParse(tb.Text, out _))
                 {
-                    textBoxes[i, j].Text = rates[i, j - 1].ToString();
+                    flag = true;
+                }
+            }
+            else
+            {
+                if (!int.TryParse(tb.Text, out _))
+                {
+                    flag = true;
+                }
+            }
+            if (flag)
+            {
+                tb.BackColor = System.Drawing.Color.Tomato;
+                tb.ForeColor = System.Drawing.Color.White;
+                errorProvider1.SetError(buttons[(int)MainFormButtons.FindSolution], Err);
+            }
+            else
+            {
+                tb.BackColor = System.Drawing.Color.White;
+                tb.ForeColor = System.Drawing.Color.Black;
+                if (CheckFormatAllTextBoxes())
+                {
+                    errorProvider1.Clear();
                 }
             }
         }
 
-        public static string[,] GetTariffMatrix()
+        private void Clear_Click(object sender, EventArgs e)
         {
-            string[,] matrix = new string[textBoxes.GetLength(0), textBoxes.GetLength(1)];
-            for (int i = 0; i < matrix.GetLength(0) - 1; i++)
-            {
-                matrix[i, matrix.GetLength(1) - 1] = textBoxes[i, 0].Text;
-                for (int j = 0; j < matrix.GetLength(1) - 1; j++)
-                {
-                    matrix[i, j] = textBoxes[i, j+1].Text;
-                }
-            }
-            for (int i = 0; i < matrix.GetLength(1) - 1; i++)
-            {
-                matrix[matrix.GetLength(0) - 1, i] = textBoxes[textBoxes.GetLength(0) -1, i + 1].Text;
-            }
-            return matrix;
+            Clear();
         }
 
-        public static void SetTariffMatrix(string[,] matrix)
+        private void DefaultData_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < matrix.GetLength(0) - 1; i++)
+            Clear();
+            SetDefaultData();
+        }
+
+        private void FindSolution_Click(object sender, EventArgs e)
+        {
+            if (CheckFormatAllTextBoxes())
             {
-                for (int j = 0; j < matrix.GetLength(1) - 1; j++)
-                {
-                   textBoxes[i, j + 1].Text = matrix[i, j];
-                }
-                textBoxes[i, 0].Text = matrix[i, matrix.GetLength(1) - 1];
+                SolverTool.SolveProblem(GetTariffMatrix(), GetTractorAmount());
+                DisplayResults(SolverTool.GetAmountArray());
             }
-            for (int i = 0; i < matrix.GetLength(1) - 1; i++)
+            else
             {
-               textBoxes[textBoxes.GetLength(0) - 1, i + 1].Text = matrix[matrix.GetLength(0) - 1, i];
+                HighlightInvalidCells();
+                MessageBox.Show(MesErr);
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            Interface.Clear();
-            SolverTool.Displayer = Iterator;
-            SolverTool.SolveProblem(GetTariffMatrix());
-            SetTariffMatrix(SolverTool.GetAmountArray());
-        }
-
-        private static void Iterator()
-        {
-            Interface.Clear();
-            SetTariffMatrix(SolverTool.GetAmountArray());
-            Interface.HighlightFilledCells(SolverTool.GetAmountArray());
-        }
     }
 }

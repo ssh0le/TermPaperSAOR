@@ -17,8 +17,8 @@ namespace TermPaper
         private static Tariff[,] tariffs;
         private static List<Consumer> consumers;
         private static List<Producer> producers;
-        private const int ProducerAmount = 4;
-        private const int ConsumerAmount = 5;
+        private static int ProducerAmount = 4;
+        private static int ConsumerAmount = 5;
         private const int AddToMax = 1;
         private static double[] Upots;
         private static double[] Vpots;
@@ -76,9 +76,9 @@ namespace TermPaper
             }
         }
 
-        public static void InitializeTariffs(string[,] matrix)
+        public static void InitializeTariffs(string[,] matrix, string[] tractorAmount)
         {
-            InitializeItems(matrix);
+            InitializeItems(matrix, tractorAmount);
             tariffs = new Tariff[consumers.Count + 1, producers.Count + 1];
             double MaxRate = FindMaxRate(matrix);
             for (int i = 0; i < ConsumerAmount; i++)
@@ -174,15 +174,17 @@ namespace TermPaper
             array = newArray;
         }
 
-        private static void InitializeItems(string[,] matrix)
+        private static void InitializeItems(string[,] matrix, string[] tractorAmount)
         {
             Consumer.Reset();
             Producer.Reset();
             consumers = new List<Consumer>();
             producers = new List<Producer>();
+            ConsumerAmount = matrix.GetLength(0) - 1;
+            ProducerAmount = matrix.GetLength(1) - 1;
             for (int i = 0; i < ProducerAmount; i++)
             {
-                producers.Add(new Producer(int.Parse(matrix[matrix.GetLength(0) - 1, i])));
+                producers.Add(new Producer(int.Parse(matrix[matrix.GetLength(0) - 1, i]) * int.Parse(tractorAmount[i])));
             }
             for (int i = 0; i < ConsumerAmount; i++)
             {
@@ -250,12 +252,11 @@ namespace TermPaper
             return array;
         }
 
-        public static void SolveProblem(string[,] matrix)
+        public static void SolveProblem(string[,] matrix, string[] tractorAmount)
         {
-            InitializeTariffs(matrix);
+            InitializeTariffs(matrix, tractorAmount);
             NorthWestMethod();
             FindOptimalSolutuion();
-            ShowResultSum();
         }
 
         public static void FindOptimalSolutuion()
@@ -264,7 +265,6 @@ namespace TermPaper
             Tariff perspectiveTariff = FindPerspectiveTariff();
             if (perspectiveTariff == null)
             {
-                MessageBox.Show("Оптимальное решение уже найденно! ");
                 return;
             }
             do
@@ -556,7 +556,7 @@ namespace TermPaper
             }
         }
 
-        public static void ShowResultSum()
+        public static double GetResultSum()
         {
             List<Tariff> filledTariffs = GetFilledTariffs();
             double sum = 0;
@@ -564,7 +564,7 @@ namespace TermPaper
             {
                 sum += tariff.Rate * tariff.Amount;
             }
-            MessageBox.Show("Итоговая сумма: " + sum);
+            return sum;
         }
 
     }
