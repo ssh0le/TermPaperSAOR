@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace TermPaper
 {
@@ -130,7 +129,7 @@ namespace TermPaper
             }
         }
 
-        private static double FindMaxRate(string [,] matrix)
+        private static double FindMaxRate(string[,] matrix)
         {
             double MaxRate = 0;
             for (int i = 0; i < ConsumerAmount; i++)

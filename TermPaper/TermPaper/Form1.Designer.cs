@@ -583,7 +583,9 @@ namespace TermPaper
             this.Controls.Add(this.Price);
             this.Controls.Add(this.Workload);
             this.Controls.Add(this.WorkType);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "MainForm";
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);

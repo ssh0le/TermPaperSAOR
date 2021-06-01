@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using static TermPaper.Interface;
 
 namespace TermPaper
@@ -15,7 +12,6 @@ namespace TermPaper
         public static Button[] buttons;
         private const string Err = "Не все текстовые поля имеют корректный формат";
         private const string MesErr = "В выделенных текстовых полях указан некорректный формат!";
-        private static bool IsValidAllFormat;
 
         public MainForm()
         {
@@ -50,9 +46,9 @@ namespace TermPaper
             textBoxes[1, 0] = textBox10;
             textBoxes[2, 0] = textBox20;
             textBoxes[3, 0] = textBox30;
-            foreach(TextBox tb in textBoxes)
+            foreach (TextBox tb in textBoxes)
             {
-                if(tb != null)
+                if (tb != null)
                 {
                     SetEvents(tb);
                 }
@@ -63,7 +59,7 @@ namespace TermPaper
             tractorAmounts[1] = TAmount2;
             tractorAmounts[2] = TAmount3;
             tractorAmounts[3] = TAmount4;
-            foreach(TextBox tb in tractorAmounts)
+            foreach (TextBox tb in tractorAmounts)
             {
                 SetEvents(tb);
             }
@@ -74,8 +70,6 @@ namespace TermPaper
             buttons[0] = DefaultData;
             buttons[1] = FindSolution;
             buttons[2] = Clear;
-
-            IsValidAllFormat = false;
         }
 
         public enum MainFormButtons
@@ -87,7 +81,7 @@ namespace TermPaper
 
         private void SetEvents(TextBox tb)
         {
-            if(tb.Tag.ToString() == "double")
+            if (tb.Tag.ToString() == "double")
             {
                 tb.KeyPress += OnlyDoubleKeyPressEvent;
             }
@@ -110,7 +104,7 @@ namespace TermPaper
         private void OnlyIntKeyPressEvent(object sender, KeyPressEventArgs e)
         {
             char ch = e.KeyChar;
-            if (!Char.IsDigit(ch) && ch != 8) 
+            if (!Char.IsDigit(ch) && ch != 8)
             {
                 e.Handled = true;
             }

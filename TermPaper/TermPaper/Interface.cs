@@ -1,6 +1,6 @@
-﻿using static TermPaper.MainForm;
-using System;
+﻿using System;
 using System.Windows.Forms;
+using static TermPaper.MainForm;
 
 namespace TermPaper
 {
@@ -133,12 +133,12 @@ namespace TermPaper
         {
             foreach (TextBox tb in textBoxes)
             {
-                if(tb != null && !CheckTextBoxFormat(tb))
+                if (tb != null && !CheckTextBoxFormat(tb))
                 {
                     return false;
                 }
             }
-            foreach(TextBox tb in tractorAmounts)
+            foreach (TextBox tb in tractorAmounts)
             {
                 if (!CheckTextBoxFormat(tb))
                 {
@@ -185,7 +185,7 @@ namespace TermPaper
             }
         }
 
-        public static void DisplayResults(string [,] matrix)
+        public static void DisplayResults(string[,] matrix)
         {
             SetAmountMatrix(matrix);
             HighlightFilledCells(matrix);
